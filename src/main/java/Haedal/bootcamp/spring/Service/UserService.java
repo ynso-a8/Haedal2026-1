@@ -4,6 +4,7 @@ import Haedal.bootcamp.spring.Domain.User;
 import Haedal.bootcamp.spring.Dto.request.UserUpdateRequestDto;
 import Haedal.bootcamp.spring.Dto.response.UserDetailResponseDto;
 import Haedal.bootcamp.spring.Dto.response.UserSimpleResponseDto;
+import Haedal.bootcamp.spring.Repository.PostRepository;
 import Haedal.bootcamp.spring.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,14 @@ import java.util.List;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final ImageService imageService;
+    private final PostRepository postRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, ImageService imageService, PostRepository postRepository) {
         this.userRepository = userRepository;
+        this.imageService = imageService;
+        this.postRepository = postRepository;
     }
 
     public UserSimpleResponseDto saveUser(User newUser) {
@@ -37,7 +42,6 @@ public class UserService {
         return users.stream().map(user -> convertUserToSimpleDto(user, user)).toList();
     }
 
-
     public List<UserSimpleResponseDto> getUserByUsername(User currentUser, String username) {
         List<UserSimpleResponseDto> user = new ArrayList<>();
         User targetUser = userRepository.findByUsername(username).orElse(null);
@@ -48,6 +52,7 @@ public class UserService {
 
         return user;
     }
+
 
     public UserDetailResponseDto updateUser(User currentUser, UserUpdateRequestDto userUpdateRequestDto) {
         if (userUpdateRequestDto.getUsername() != null) {
@@ -68,36 +73,41 @@ public class UserService {
         return convertUserToDetailDto(currentUser, currentUser);
     }
 
-
     public UserDetailResponseDto getUserDetail(User currentUser, Long targetUserId) {
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
         return convertUserToDetailDto(currentUser, targetUser);
     }
 
-    public UserDetailResponseDto convertUserToDetailDto(User currentUser, User targetUser) {
-        return new UserDetailResponseDto(
-                targetUser.getId(),
-                targetUser.getUsername(),
-                targetUser.getName(),
-                null,
-                false,
-                targetUser.getBio(),
-                targetUser.getJoinedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm")),
-                0L,
-                0L,
-                0L
-        );
-    }
 
     public UserSimpleResponseDto convertUserToSimpleDto(User currentUser, User targetUser) {
+        String imageUrl = targetUser.getImageUrl();
+        String imageData = imageService.encodeImageToBase64(System.getProperty("user.dir") + "/src/main/resources/static/" + imageUrl);
 
         return new UserSimpleResponseDto(
                 targetUser.getId(),
                 targetUser.getUsername(),
                 targetUser.getName(),
-                null,
+                imageData,
                 false
+        );
+    }
+
+    public UserDetailResponseDto convertUserToDetailDto(User currentUser, User targetUser) {
+        String imageUrl = targetUser.getImageUrl();
+        String imageData = imageService.encodeImageToBase64(System.getProperty("user.dir") + "/src/main/resources/static/" + imageUrl);
+
+        return new UserDetailResponseDto(
+                targetUser.getId(),
+                targetUser.getUsername(),
+                targetUser.getName(),
+                imageData,
+                false,
+                targetUser.getBio(),
+                targetUser.getJoinedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm")),
+                postRepository.countByUser(targetUser),
+                0L,
+                0L
         );
     }
 }
