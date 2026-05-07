@@ -4,6 +4,7 @@ import Haedal.bootcamp.spring.Domain.User;
 import Haedal.bootcamp.spring.Dto.request.UserUpdateRequestDto;
 import Haedal.bootcamp.spring.Dto.response.UserDetailResponseDto;
 import Haedal.bootcamp.spring.Dto.response.UserSimpleResponseDto;
+import Haedal.bootcamp.spring.Repository.FollowRepository;
 import Haedal.bootcamp.spring.Repository.PostRepository;
 import Haedal.bootcamp.spring.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +19,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final PostRepository postRepository;
+    private final FollowRepository followRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, ImageService imageService, PostRepository postRepository) {
+    public UserService(UserRepository userRepository, ImageService imageService, PostRepository postRepository, FollowRepository followRepository) {
         this.userRepository = userRepository;
         this.imageService = imageService;
         this.postRepository = postRepository;
+        this.followRepository = followRepository;
     }
 
     public UserSimpleResponseDto saveUser(User newUser) {
@@ -89,7 +92,7 @@ public class UserService {
                 targetUser.getUsername(),
                 targetUser.getName(),
                 imageData,
-                false
+                followRepository.existsByFollowerAndFollowing(currentUser, targetUser)
         );
     }
 
@@ -102,12 +105,12 @@ public class UserService {
                 targetUser.getUsername(),
                 targetUser.getName(),
                 imageData,
-                false,
+                followRepository.existsByFollowerAndFollowing(currentUser, targetUser),
                 targetUser.getBio(),
                 targetUser.getJoinedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm")),
                 postRepository.countByUser(targetUser),
-                0L,
-                0L
+                followRepository.countByFollowing(targetUser),
+                followRepository.countByFollower(targetUser)
         );
     }
 }

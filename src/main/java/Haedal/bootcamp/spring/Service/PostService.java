@@ -4,6 +4,7 @@ import Haedal.bootcamp.spring.Domain.Post;
 import Haedal.bootcamp.spring.Domain.User;
 import Haedal.bootcamp.spring.Dto.response.PostResponseDto;
 import Haedal.bootcamp.spring.Dto.response.UserSimpleResponseDto;
+import Haedal.bootcamp.spring.Repository.LikeRepository;
 import Haedal.bootcamp.spring.Repository.PostRepository;
 import Haedal.bootcamp.spring.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +19,15 @@ public class PostService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final ImageService imageService;
+    private final LikeRepository likeRepository;
 
     @Autowired
-    public PostService(PostRepository postRepository, UserRepository userRepository, UserService userService, ImageService imageService) {
+    public PostService(PostRepository postRepository, UserRepository userRepository, UserService userService, ImageService imageService, LikeRepository likeRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.imageService = imageService;
+        this.likeRepository = likeRepository;
     }
 
 
